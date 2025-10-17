@@ -212,6 +212,89 @@ app.get('/admin/vaults', (req, res) => {
   ])
 })
 
+// Lightweight health bundle for Spark status dashboard
+app.get('/status.json', async (req, res) => {
+  const startedAt = Date.now()
+
+  // Helper: fetch with timeout
+  async function fetchWithTimeout(url, options = {}, timeoutMs = 3500) {
+    const controller = new AbortController()
+    const id = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const resp = await fetch(url, { ...options, signal: controller.signal })
+      clearTimeout(id)
+      return resp
+    } catch (err) {
+      clearTimeout(id)
+      throw err
+    }
+  }
+
+  // API basics
+  const api = {
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  }
+
+  // Xumm
+  let xumm = {
+    configured: !!(XUMM_API_KEY && XUMM_API_SECRET),
+    status: 'simulated'
+  }
+  if (xumm.configured) {
+    try {
+      const xummModule = await import('xumm-sdk')
+      const { XummSdk } = xummModule.default || xummModule
+      const x = new XummSdk(XUMM_API_KEY, XUMM_API_SECRET)
+      const ping = await x.ping()
+      xumm = {
+        configured: true,
+        status: 'ok',
+        app: ping.application.name
+      }
+    } catch (e) {
+      xumm = {
+        configured: true,
+        status: 'error',
+        error: e instanceof Error ? e.message : 'Unknown error'
+      }
+    }
+  }
+
+  // XRPL (public cluster)
+  let xrpl = { status: 'error' }
+  try {
+    const resp = await fetchWithTimeout('https://xrplcluster.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: 'server_info', params: [{}] })
+    }, 3500)
+    if (resp.ok) {
+      const data = await resp.json()
+      const info = data?.result?.info
+      xrpl = {
+        status: 'ok',
+        server: info?.build_version,
+        complete_ledgers: info?.complete_ledgers,
+        validated_ledger: info?.validated_ledger?.seq
+      }
+    } else {
+      xrpl = { status: 'error', error: `HTTP ${resp.status}` }
+    }
+  } catch (e) {
+    xrpl = { status: 'error', error: e instanceof Error ? e.message : 'Network error' }
+  }
+
+  res.json({
+    api,
+    xumm,
+    xrpl,
+    elapsed_ms: Date.now() - startedAt
+  })
+})
+
 function generateMockAddress() {
   const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
   let address = 'r'
