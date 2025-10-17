@@ -20,27 +20,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build with environment variables
         env:
-          VITE_API_BASE: ${{ vars.VITE_API_BASE || 'https://api.unykorn.org' }}
-          VITE_BRAND: ${{ vars.VITE_BRAND || 'Unykorn' }}
-          VITE_NETWORK_LABEL: ${{ vars.VITE_NETWORK_LABEL || 'XRPL Mainnet' }}
-          VITE_ENABLE_SIMULATION: ${{ vars.VITE_ENABLE_SIMULATION || 'true' }}
-        run: npm run build
-      
+          VITE_API_BASE: ${{ vars.VITE_API_BASE }}
+          VITE_BRAND: ${{ vars.VITE_BRAND }}
+          VITE_NETWORK_LABEL: ${{ vars.VITE_NETWORK_LABEL }}
+          VITE_ENABLE_SIMULATION: ${{ vars.VITE_ENABLE_SIMULATION }}
+        run: |
+          npm run build
+          # SPA fallback for GitHub Pages
+          cp dist/index.html dist/404.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
-      
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
