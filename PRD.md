@@ -7,11 +7,12 @@ Unykorn Global Finance is a sovereign-grade blockchain infrastructure interface 
 2. **Precision Minimalism** - Ultra-clean interface where every pixel serves a purpose, echoing the exactness of financial infrastructure and compliance-grade systems.
 3. **Futuristic Sophistication** - Subtle cosmic elements and fluid micro-interactions that feel like accessing a living financial mainframe, balancing BlackRock's institutional minimalism with Blade Runner's technological elegance.
 
-**Complexity Level**: Light Application (multiple features with basic state)
+**Complexity Level**: Light Application (multiple features with basic state + backend API integration)
 - Multi-page navigation with distinct sections (Home, Join, Wallet, Status, Partners, Admin)
-- Wallet integration simulation and status dashboards
+- Real Xumm wallet integration with QR code generation and polling
+- Backend API connectivity with automatic fallback to simulation mode
 - Interactive proof verification and compliance displays
-- The scope focuses on establishing credibility through design rather than complex backend logic
+- The scope establishes credibility through design while enabling real wallet onboarding
 
 ## Essential Features
 
@@ -29,19 +30,19 @@ Unykorn Global Finance is a sovereign-grade blockchain infrastructure interface 
 - **Progression**: Click nav item → Smooth page transition with subtle animation → New content loads with contextual layout → Navigation state updates
 - **Success criteria**: Zero friction navigation, each page feels like part of unified sovereign system
 
-### XRPL Wallet Connection Simulation
-- **Functionality**: Join page with Xumm QR code simulation and wallet dashboard preview showing vault status and compliance badges
-- **Purpose**: Demonstrate decentralized onboarding flow and vault-based identity system
-- **Trigger**: User navigates to Join page and initiates connection
-- **Progression**: View QR widget → Simulate wallet connection → Dashboard reveals with progress animation → Display vault address, status, tokenized assets
-- **Success criteria**: Flow feels secure, professional, and sovereign-grade (not typical Web3 chaos)
+### XRPL Wallet Connection with Xumm
+- **Functionality**: Join page with real Xumm QR code generation and wallet dashboard showing vault status and compliance badges
+- **Purpose**: Enable decentralized onboarding flow with real XRPL wallet creation via Xumm SDK
+- **Trigger**: User navigates to Join page and clicks "Connect with Xumm"
+- **Progression**: Click connect → Backend generates Xumm payload → QR code displays → User scans with Xumm → Frontend polls result → Wallet connects → Dashboard reveals with progress animation → Display vault address, status, tokenized assets
+- **Success criteria**: Real wallet onboarding works end-to-end, falls back gracefully to simulation if backend offline, feels secure and sovereign-grade
 
-### Real-Time Status Dashboard
-- **Functionality**: Interactive proof-of-reserve dashboard showing chain status, XRPL connectivity, vault registry sync, and Chainlink attestations
-- **Purpose**: Transparency and verification - demonstrating "auditable by design" philosophy to regulators and institutions
+### Real-Time Status Dashboard with Backend Monitoring
+- **Functionality**: Interactive dashboard showing backend API status, Xumm connectivity, XRPL chain status, vault registry sync, and Chainlink attestations
+- **Purpose**: Transparency and verification - demonstrating "auditable by design" philosophy with real-time backend health monitoring
 - **Trigger**: User navigates to Status page
-- **Progression**: Load dashboard → Display live status indicators (animated) → Show proof verification badges → Reveal IPFS attestation access
-- **Success criteria**: Conveys operational excellence, compliance-ready infrastructure, cryptographic verifiability
+- **Progression**: Load dashboard → Check backend API health → Display live status indicators (animated) → Show Xumm integration status → Show proof verification badges → Reveal IPFS attestation access
+- **Success criteria**: Real-time connection status visible, conveys operational excellence, users can verify infrastructure is live
 
 ### Institutional Partner Showcase
 - **Functionality**: Credibility page displaying partner logos, compliance frameworks (ISO-20022, Basel III, FATF, SEC), and institutional onboarding CTA

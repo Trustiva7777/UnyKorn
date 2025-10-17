@@ -1,6 +1,34 @@
 # Unykorn — Sovereign Infrastructure for Global Finance
 
-A sovereign-grade blockchain infrastructure interface showcasing digital and real-world asset convergence under one compliant protocol.
+A sovereign-grade blockchain infrastructure platform featuring XRPL wallet integration, real-time status monitoring, and institutional-grade design.
+
+## 🚀 Quick Start
+
+**Want to get running in 5 minutes?** → [QUICKSTART.md](./QUICKSTART.md)
+
+### Local Development
+```bash
+# Install and start frontend
+npm install
+npm run dev
+
+# In another terminal, start backend
+cd backend
+npm install
+npm start
+```
+
+Visit http://localhost:5173 to see the app.
+
+## 📚 Documentation
+
+| Guide | Purpose |
+|-------|---------|
+| **[QUICKSTART.md](./QUICKSTART.md)** | Get running in 5 minutes |
+| **[BACKEND_SETUP.md](./BACKEND_SETUP.md)** | Complete backend integration guide |
+| **[DEPLOYMENT.md](./DEPLOYMENT.md)** | Production deployment (Pages + Cloud) |
+| **[PRD.md](./PRD.md)** | Product requirements & design philosophy |
+| **[INTEGRATION.md](./INTEGRATION.md)** | Legacy integration notes |
 
 ## 🌟 Overview
 
@@ -8,46 +36,24 @@ This application presents the Unykorn ecosystem through a beautiful, institution
 
 - **Constellation-based cosmic UI** with animated backgrounds
 - **Multi-page navigation** (Home, Join, Wallet, Status, Partners, Admin)
-- **XRPL/Xumm wallet integration** for decentralized onboarding
+- **Real XRPL/Xumm wallet integration** for decentralized onboarding
+- **Backend API connectivity** with automatic fallback to simulation mode
 - **Real-time status monitoring** with proof-of-reserve dashboards
 - **Compliance showcase** (ISO-20022, Basel III, FATF)
 - **Institutional partner presentation**
 
-## 🔌 Backend Integration
+## 🏗️ Architecture
 
-**This Spark app is the frontend.** It connects to your separate UnyKorn backend API for real XRPL/Xumm functionality.
+```
+┌────────────────────┐         ┌────────────────────────┐
+│  Spark Frontend    │◄───────►│  Backend API           │
+│  (GitHub Pages)    │  HTTPS  │  (Render/Fly/Workers)  │
+│  unykorn.org       │         │  api.unykorn.org       │
+└────────────────────┘         └────────────────────────┘
+```
 
-### Quick Setup
-
-1. **Configure API endpoint:**
-   ```bash
-   # .env
-   VITE_API_BASE=http://localhost:4000
-   ```
-
-2. **Start your backend** (from UnyKorn repo):
-   ```bash
-   npm run dev:api
-   ```
-
-3. **Start this frontend**:
-   ```bash
-   npm run dev
-   ```
-
-4. **Visit the app:**
-   - Status: http://localhost:5173/status (shows API connection)
-   - Join: http://localhost:5173/join (generates Xumm QR)
-   - Wallet: http://localhost:5173/wallet (shows connected wallet)
-
-### Deployment
-
-**Frontend (this app):** Deploy to GitHub Pages, Vercel, Netlify  
-**Backend (UnyKorn repo):** Deploy to Render, Fly.io, Railway
-
-Set `VITE_API_BASE` to your production API URL (e.g., `https://api.unykorn.org`)
-
-📖 **Full integration guide:** See [INTEGRATION.md](./INTEGRATION.md)
+**Frontend:** Static React app deployed to GitHub Pages  
+**Backend:** Node.js/Express API with Xumm SDK integration
 
 ## ✨ Features
 
@@ -67,7 +73,7 @@ Set `VITE_API_BASE` to your production API URL (e.g., `https://api.unykorn.org`)
 ### 💼 Wallet Page
 - Connected XRPL address display
 - Vault status and compliance badges
-- Tokenized asset registry (placeholder)
+- Tokenized asset registry
 - Proof attestation links (IPFS, Chainlink)
 
 ### 📊 Status Page
@@ -106,9 +112,9 @@ Set `VITE_API_BASE` to your production API URL (e.g., `https://api.unykorn.org`)
 - Value flow diagrams (educational)
 - Micro-interactions (functional feedback)
 
-## 🏗️ Architecture
+## 🔧 Tech Stack
 
-### Tech Stack
+### Frontend
 - **React 19** + TypeScript
 - **Vite** build system
 - **Tailwind CSS** + shadcn/ui components
@@ -116,51 +122,76 @@ Set `VITE_API_BASE` to your production API URL (e.g., `https://api.unykorn.org`)
 - **Phosphor Icons**
 - **Spark KV** for persistent state
 
-### Project Structure
+### Backend
+- **Node.js** + Express
+- **Xumm SDK** for XRPL wallet integration
+- **CORS** configured for frontend
+- **Environment-based** configuration
+
+## 📁 Project Structure
+
 ```
-src/
-├── App.tsx                    # Main router
-├── components/
-│   ├── ConstellationBackground.tsx
-│   ├── Navigation.tsx
-│   ├── ValueFlowDiagram.tsx
-│   ├── pages/
-│   │   ├── HomePage.tsx
-│   │   ├── JoinPage.tsx      # Xumm integration
-│   │   ├── WalletPage.tsx    # Connected wallet display
-│   │   ├── StatusPage.tsx    # API monitoring
-│   │   ├── PartnersPage.tsx
-│   │   └── AdminPage.tsx
-│   └── ui/                    # shadcn components
-├── hooks/
-│   ├── use-mobile.ts
-│   └── use-api-status.ts      # Backend health monitoring
-├── lib/
-│   ├── utils.ts
-│   └── api.ts                 # Backend API client
-└── index.css                  # Theme configuration
+spark-template/
+├── src/                          # Frontend React app
+│   ├── components/
+│   │   ├── pages/               # Page components
+│   │   │   ├── HomePage.tsx
+│   │   │   ├── JoinPage.tsx     # Xumm integration
+│   │   │   ├── WalletPage.tsx   # Wallet display
+│   │   │   ├── StatusPage.tsx   # API monitoring
+│   │   │   ├── PartnersPage.tsx
+│   │   │   └── AdminPage.tsx
+│   │   └── ui/                  # shadcn components
+│   ├── hooks/
+│   │   └── use-api-status.ts    # Backend health check
+│   ├── lib/
+│   │   ├── api.ts               # API client
+│   │   └── config.ts            # Configuration
+│   └── index.css                # Theme
+├── backend/                      # Backend API server
+│   ├── server.js                # Express server
+│   ├── package.json
+│   └── README.md
+├── .github/workflows/
+│   └── deploy.yml               # Auto-deploy to Pages
+├── PRD.md                       # Design specifications
+├── QUICKSTART.md                # Quick start guide
+├── BACKEND_SETUP.md             # Backend guide
+├── DEPLOYMENT.md                # Deployment guide
+└── README.md                    # This file
 ```
 
-## 🔐 Data Persistence
+## 🔐 Environment Variables
 
-Uses **Spark KV** (key-value storage) for wallet data:
-
-```typescript
-import { useKV } from '@github/spark/hooks'
-
-const [walletAddress, setWalletAddress] = useKV<string | null>('wallet-address', null)
+### Frontend (.env or GitHub Actions Variables)
+```bash
+VITE_API_BASE=https://api.unykorn.org  # Backend API URL
+VITE_BRAND=Unykorn                     # Brand name
+VITE_NETWORK_LABEL=XRPL Mainnet        # Network label
+VITE_ENABLE_SIMULATION=false           # Simulation mode
 ```
 
-Data persists between sessions — no localStorage or external databases needed.
+### Backend (Codespaces Secrets or Cloud Provider)
+```bash
+XUMM_API_KEY=your-key                  # Xumm API key
+XUMM_API_SECRET=your-secret            # Xumm API secret
+CORS_ORIGINS=https://unykorn.org       # Allowed origins
+PORT=4000                              # Server port
+```
 
-## 🚀 Development
+## 🧪 Development
 
 ```bash
 # Install dependencies
 npm install
 
-# Start dev server
+# Start dev server (frontend)
 npm run dev
+
+# Start backend (separate terminal)
+cd backend
+npm install
+npm start
 
 # Build for production
 npm run build
@@ -169,47 +200,72 @@ npm run build
 npm run preview
 ```
 
-## 📡 API Endpoints
+## 🚀 Deployment
 
-The frontend calls these backend endpoints (when configured):
+### Frontend (GitHub Pages)
+1. Push to main branch
+2. GitHub Actions automatically builds and deploys
+3. Configure custom domain in repo settings
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/health` | GET | Health check |
-| `/xumm/ping` | GET | Verify Xumm connection |
-| `/onboard/start` | POST | Generate Xumm QR code |
-| `/onboard/result/:uuid` | GET | Poll for signature |
+### Backend (Render/Fly/Workers)
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete instructions.
 
-## 🎯 Environment Variables
+**Quick option - Render.com:**
+1. Create Web Service
+2. Connect repo
+3. Root Directory: `backend`
+4. Add environment variables
+5. Deploy
 
-```bash
-# Required for backend integration
-VITE_API_BASE=https://api.unykorn.org
+## 📡 API Integration
 
-# Optional for GitHub Pages
-PAGES_CNAME=unykorn.org
-```
+The frontend is **ready for backend integration** with these features:
 
-## 📚 Documentation
+✅ API client with automatic fallback (`/src/lib/api.ts`)  
+✅ Environment variable support  
+✅ Real-time status monitoring  
+✅ Simulation mode for offline development  
+✅ CORS handling  
+✅ Error handling with toast notifications
 
-- [PRD.md](./PRD.md) — Product requirements and design specifications
-- [INTEGRATION.md](./INTEGRATION.md) — Backend integration guide
-- UnyKorn Backend Repo — [GO-LIVE.md](https://github.com/Trustiva7777/UnyKorn/blob/main/GO-LIVE.md)
+**Backend endpoints expected:**
+- `GET /health` - Health check
+- `GET /xumm/ping` - Xumm status
+- `POST /onboard/start` - Generate QR code
+- `GET /onboard/result/:uuid` - Poll for signature
 
-## 🔗 Related Repositories
+See [BACKEND_SETUP.md](./BACKEND_SETUP.md) for complete API documentation.
 
-- **Frontend (this repo):** Spark-based React UI
-- **Backend:** [UnyKorn](https://github.com/Trustiva7777/UnyKorn) — Node.js API with XRPL/Xumm
+## 🔗 Related Resources
 
-## 🌐 Domains
+- **Xumm Developer Portal:** https://apps.xumm.dev
+- **XRPL Documentation:** https://xrpl.org
+- **shadcn/ui Components:** https://ui.shadcn.com
 
-- **Production:** unykorn.org (frontend) + api.unykorn.org (backend)
-- **Alt Domain:** trustiva.io
+## 🆘 Troubleshooting
+
+**API shows "Offline"?**
+- Check VITE_API_BASE is correct
+- Verify backend is running
+- Check Status page for details
+
+**Build fails?**
+- Delete node_modules and package-lock.json
+- Run npm install
+- Check GitHub Actions logs
+
+**CORS errors?**
+- Add frontend domain to backend CORS_ORIGINS
+- Ensure HTTPS matches (http vs https)
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for more troubleshooting.
 
 ## 📄 License
 
 See [LICENSE](./LICENSE)
 
 ---
+
+**🎯 Ready to get started?** Follow the [QUICKSTART.md](./QUICKSTART.md) guide!
 
 **Built with sovereignty. Powered by XRPL. Designed for institutions.**
