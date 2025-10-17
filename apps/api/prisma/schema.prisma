@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      String
+  space     Space?   @relation(fields: [spaceId], references: [id])
+  spaceId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallets   Wallet[]
+}
+
+model Space {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  ownerId   String?
+  createdAt DateTime   @default(now())
+
+  users     User[]
+  projects  Project[]
+  contacts  Contact[]
+  wallets   Wallet[]
+  invitations Invitation[]
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  status    String   @default("idea")
+  spaceId   String
+  managerId String?
+  createdAt DateTime @default(now())
+
+  space     Space    @relation(fields: [spaceId], references: [id])
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  org       String?
+  notes     String?
+  spaceId   String
+  createdAt DateTime @default(now())
+
+  space     Space    @relation(fields: [spaceId], references: [id])
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  label     String
+  chain     String
+  address   String
+  userId    String?
+  spaceId   String
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id])
+  space     Space    @relation(fields: [spaceId], references: [id])
+}
+
+model Invitation {
+  id         String   @id @default(cuid())
+  email      String
+  role       String
+  spaceId    String
+  token      String   @unique
+  createdAt  DateTime @default(now())
+  consumedAt DateTime?
+
+  space      Space    @relation(fields: [spaceId], references: [id])
+}
+
+// XRPL Issuer & Token Registry
+model Issuer {
+  id           String   @id @default(cuid())
+  org          String
+  domain       String?
+  coldAddress  String
+  hotAddress   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tokens       Token[]
+}
+
+model Token {
+  id        String   @id @default(cuid())
+  code      String
+  name      String
+  precision Int      @default(6)
+  issuerId  String
+  issuer    Issuer   @relation(fields: [issuerId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  trustlineRequests TrustlineRequest[]
+
+  @@unique([issuerId, code])
+}
+
+model TrustlineRequest {
+  id        String   @id @default(cuid())
+  spaceId   String
+  address   String
+  tokenId   String
+  token     Token    @relation(fields: [tokenId], references: [id])
+  status    String   @default("pending")
+  note      String?
+  createdAt DateTime @default(now())
+  decidedAt DateTime?
+}
+
+// Event log for audit and reporting
+model Event {
+  id           String   @id @default(cuid())
+  type         String   // issue | redeem | payment | trustline | xumm_signin | xumm_trustline | other
+  route        String?
+  account      String?
+  destination  String?
+  tokenId      String?
+  issuerCold   String?
+  currency     String?
+  value        String?
+  hash         String?
+  engineResult String?
+  memos        Json?
+  raw          Json?
+  createdAt    DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([account, createdAt])
+  @@index([tokenId, createdAt])
+}
+
+// Ledger transaction audit log
+model TxLog {
+  id           String   @id @default(cuid())
+  txHash       String   @unique
+  ledgerIndex  Int?
+  type         String
+  payloadUuid  String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}

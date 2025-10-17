@@ -1,0 +1,37 @@
+{
+  "name": "unykorn-7777-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,api,admin -c cyan,magenta,green \"npm run -w @unykorn/web dev\" \"npm run -w @unykorn/api dev\" \"npm run -w @unykorn/admin dev\"",
+    "dev:reset": "bash -lc 'pids=\"$(lsof -t -i:3000 -sTCP:LISTEN || true)\"; [ -n \"$pids\" ] && kill -9 $pids || true; pids=\"$(lsof -t -i:3001 -sTCP:LISTEN || true)\"; [ -n \"$pids\" ] && kill -9 $pids || true; pids=\"$(lsof -t -i:4000 -sTCP:LISTEN || true)\"; [ -n \"$pids\" ] && kill -9 $pids || true'",
+    "dev:web": "npm run -w @unykorn/web dev",
+    "dev:api": "node -e \"try{require('child_process').execSync('kill -9 $(lsof -t -i:4000) 2>/dev/null || true')}catch(e){}\" && npm run -w @unykorn/api start",
+  "dev:admin": "npm run -w @unykorn/admin dev",
+  "api:stop": "bash -lc 'pids=\"$(lsof -t -i:4000 -sTCP:LISTEN || true)\"; [ -n \"$pids\" ] && kill -9 $pids || true; pkill -f \"nodemon src/index\\.js\" || true; pkill -f \"node .*apps/api/src/index\\.js\" || true; sleep 0.3'",
+  "api:start": "npm run -w @unykorn/api dev",
+  "check:public": "bash scripts/check-public.sh",
+  "api:reset": "bash -lc 'npm run api:stop; for i in {1..10}; do lsof -i:4000 -sTCP:LISTEN -n -P >/dev/null 2>&1 || break; sleep 0.2; done; npm run api:start'",
+    "build": "npm run -w @unykorn/web build && npm run -w @unykorn/api build && npm run -w @unykorn/admin build",
+    "start": "concurrently -n web,api,admin -c cyan,magenta,green \"npm run -w @unykorn/web start\" \"npm run -w @unykorn/api start\" \"npm run -w @unykorn/admin start\"",
+    "start:web": "npm run -w @unykorn/web start",
+    "start:api": "npm run -w @unykorn/api start",
+    "start:admin": "npm run -w @unykorn/admin start",
+    "airdrop": "node scripts/airdrop.js scripts/recipients.sample.csv",
+    "dns:show": "node scripts/godaddy-dns.js show",
+    "dns:pages:apex": "node scripts/godaddy-dns.js setup-pages --mode apex",
+    "dns:pages:www": "node scripts/godaddy-dns.js setup-pages --mode www",
+    "dns:set:api": "node scripts/godaddy-dns.js set-api",
+    "cf:verify": "node scripts/cloudflare-dns.js verify",
+      "cf:show": "node scripts/cloudflare-dns.js show",
+      "cf:pages:apex": "node scripts/cloudflare-dns.js setup-pages --mode apex",
+      "cf:pages:www": "node scripts/cloudflare-dns.js setup-pages --mode www",
+      "cf:set:api": "node scripts/cloudflare-dns.js set-api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}

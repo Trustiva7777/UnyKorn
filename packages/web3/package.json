@@ -1,0 +1,10 @@
+{
+  "name": "@unykorn/web3",
+  "private": true,
+  "version": "0.1.0",
+  "main": "index.js",
+  "type": "commonjs",
+  "dependencies": {
+    "@unykorn/shared": "*"
+  }
+}
