@@ -25,6 +25,7 @@ Visit http://localhost:5173 to see the app.
 | Guide | Purpose |
 |-------|---------|
 | **[QUICKSTART.md](./QUICKSTART.md)** | Get running in 5 minutes |
+| **[CODESPACES_SECRETS_FIX.md](./CODESPACES_SECRETS_FIX.md)** | 🔧 Fix Codespaces secrets not found |
 | **[BACKEND_SETUP.md](./BACKEND_SETUP.md)** | Complete backend integration guide |
 | **[DEPLOYMENT.md](./DEPLOYMENT.md)** | Production deployment (Pages + Cloud) |
 | **[PRD.md](./PRD.md)** | Product requirements & design philosophy |
@@ -173,11 +174,17 @@ VITE_ENABLE_SIMULATION=false           # Simulation mode
 
 ### Backend (Codespaces Secrets or Cloud Provider)
 ```bash
-XUMM_API_KEY=your-key                  # Xumm API key
-XUMM_API_SECRET=your-secret            # Xumm API secret
+# The backend checks multiple environment variable names for flexibility:
+# For API key: XUMM_API_KEY → XUMM_KEY → API_KEY
+# For API secret: XUMM_API_SECRET → XUMM_SECRET → API_SECRET
+
+XUMM_API_KEY=your-key                  # Xumm API key (recommended name)
+XUMM_API_SECRET=your-secret            # Xumm API secret (recommended name)
 CORS_ORIGINS=https://unykorn.org       # Allowed origins
 PORT=4000                              # Server port
 ```
+
+**Secrets not working in Codespaces?** → [CODESPACES_SECRETS_FIX.md](./CODESPACES_SECRETS_FIX.md)
 
 ## 🧪 Development
 
@@ -243,6 +250,11 @@ See [BACKEND_SETUP.md](./BACKEND_SETUP.md) for complete API documentation.
 - **shadcn/ui Components:** https://ui.shadcn.com
 
 ## 🆘 Troubleshooting
+
+**Codespaces secrets not working?**
+- See [CODESPACES_SECRETS_FIX.md](./CODESPACES_SECRETS_FIX.md) for detailed fix
+- Backend now checks multiple secret names: `XUMM_API_KEY`, `XUMM_KEY`, `API_KEY`
+- Rebuild Codespace after adding secrets
 
 **API shows "Offline"?**
 - Check VITE_API_BASE is correct

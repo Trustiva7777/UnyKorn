@@ -8,6 +8,9 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 4000
 
+const XUMM_API_KEY = process.env.XUMM_API_KEY || process.env.XUMM_KEY || process.env.API_KEY
+const XUMM_API_SECRET = process.env.XUMM_API_SECRET || process.env.XUMM_SECRET || process.env.API_SECRET
+
 const corsOrigins = process.env.CORS_ORIGINS 
   ? process.env.CORS_ORIGINS.split(',') 
   : ['http://localhost:5173', 'http://localhost:3000']
@@ -27,12 +30,12 @@ app.get('/health', (req, res) => {
 
 app.get('/xumm/ping', async (req, res) => {
   try {
-    const hasXummConfig = !!(process.env.XUMM_API_KEY && process.env.XUMM_API_SECRET)
+    const hasXummConfig = !!(XUMM_API_KEY && XUMM_API_SECRET)
     
     if (hasXummConfig) {
       const xummModule = await import('xumm-sdk')
       const { XummSdk } = xummModule.default || xummModule
-      const xumm = new XummSdk(process.env.XUMM_API_KEY, process.env.XUMM_API_SECRET)
+      const xumm = new XummSdk(XUMM_API_KEY, XUMM_API_SECRET)
       const ping = await xumm.ping()
       
       res.json({
@@ -58,12 +61,12 @@ app.get('/xumm/ping', async (req, res) => {
 
 app.post('/onboard/start', async (req, res) => {
   try {
-    const hasXummConfig = !!(process.env.XUMM_API_KEY && process.env.XUMM_API_SECRET)
+    const hasXummConfig = !!(XUMM_API_KEY && XUMM_API_SECRET)
     
     if (hasXummConfig) {
       const xummModule = await import('xumm-sdk')
       const { XummSdk } = xummModule.default || xummModule
-      const xumm = new XummSdk(process.env.XUMM_API_KEY, process.env.XUMM_API_SECRET)
+      const xumm = new XummSdk(XUMM_API_KEY, XUMM_API_SECRET)
       
       const payload = await xumm.payload.create({
         txjson: {
@@ -108,12 +111,12 @@ app.post('/onboard/start', async (req, res) => {
 app.get('/onboard/result/:uuid', async (req, res) => {
   try {
     const { uuid } = req.params
-    const hasXummConfig = !!(process.env.XUMM_API_KEY && process.env.XUMM_API_SECRET)
+    const hasXummConfig = !!(XUMM_API_KEY && XUMM_API_SECRET)
     
     if (hasXummConfig) {
       const xummModule = await import('xumm-sdk')
       const { XummSdk } = xummModule.default || xummModule
-      const xumm = new XummSdk(process.env.XUMM_API_KEY, process.env.XUMM_API_SECRET)
+      const xumm = new XummSdk(XUMM_API_KEY, XUMM_API_SECRET)
       
       const payload = await xumm.payload.get(uuid)
       
@@ -230,6 +233,8 @@ setInterval(() => {
 app.listen(PORT, () => {
   console.log(`🚀 Unykorn API Server running on port ${PORT}`)
   console.log(`📡 CORS enabled for: ${corsOrigins.join(', ')}`)
-  console.log(`🔐 Xumm configured: ${!!(process.env.XUMM_API_KEY && process.env.XUMM_API_SECRET)}`)
+  console.log(`🔐 Xumm configured: ${!!(XUMM_API_KEY && XUMM_API_SECRET)}`)
+  console.log(`🔑 Looking for keys: XUMM_API_KEY, XUMM_KEY, or API_KEY`)
+  console.log(`🔑 Looking for secrets: XUMM_API_SECRET, XUMM_SECRET, or API_SECRET`)
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`)
 })

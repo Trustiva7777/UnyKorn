@@ -92,17 +92,23 @@ Returns list of vaults with collateral and verification status.
 
 ## 🔐 Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `PORT` | Server port (default: 4000) | No |
-| `NODE_ENV` | Environment (development/production) | No |
-| `XUMM_API_KEY` | Xumm API key for real integration | No* |
-| `XUMM_API_SECRET` | Xumm API secret | No* |
-| `CORS_ORIGINS` | Comma-separated allowed origins | Yes |
-| `VITE_BRAND` | Brand name | No |
-| `VITE_NETWORK_LABEL` | Network label | No |
+| Variable | Description | Required | Alternative Names |
+|----------|-------------|----------|------------------|
+| `PORT` | Server port (default: 4000) | No | - |
+| `NODE_ENV` | Environment (development/production) | No | - |
+| `XUMM_API_KEY` | Xumm API key for real integration | No* | `XUMM_KEY`, `API_KEY` |
+| `XUMM_API_SECRET` | Xumm API secret | No* | `XUMM_SECRET`, `API_SECRET` |
+| `CORS_ORIGINS` | Comma-separated allowed origins | Yes | - |
+| `VITE_BRAND` | Brand name | No | - |
+| `VITE_NETWORK_LABEL` | Network label | No | - |
 
 *If Xumm credentials not provided, server runs in simulation mode
+
+**Note:** The backend checks multiple environment variable names for flexibility:
+- For API key: `XUMM_API_KEY` → `XUMM_KEY` → `API_KEY`
+- For API secret: `XUMM_API_SECRET` → `XUMM_SECRET` → `API_SECRET`
+
+This allows the backend to work with different secret naming conventions in Codespaces.
 
 ## 🧪 Testing
 
