@@ -2,11 +2,27 @@ import { motion } from 'framer-motion'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, Warning, FileText } from '@phosphor-icons/react'
+import { CheckCircle, Warning, FileText, XCircle } from '@phosphor-icons/react'
+import { useApiStatus } from '@/hooks/use-api-status'
+import { API_BASE } from '@/lib/api'
 
 export function StatusPage() {
+  const { isOnline, isLoading, xummStatus } = useApiStatus()
+
   const statusItems = [
-    { label: 'Chain Status', value: 'Operational', status: 'success', icon: CheckCircle },
+    { 
+      label: 'API Backend', 
+      value: isLoading ? 'Checking...' : (isOnline ? 'Connected' : 'Offline'), 
+      status: isLoading ? 'warning' : (isOnline ? 'success' : 'error'), 
+      icon: isLoading ? Warning : (isOnline ? CheckCircle : XCircle),
+      detail: API_BASE
+    },
+    { 
+      label: 'Xumm Integration', 
+      value: isLoading ? 'Checking...' : (xummStatus === 'ok' ? 'Connected' : 'Offline'), 
+      status: isLoading ? 'warning' : (xummStatus === 'ok' ? 'success' : 'error'), 
+      icon: isLoading ? Warning : (xummStatus === 'ok' ? CheckCircle : XCircle)
+    },
     { label: 'XRPL Connectivity', value: 'Online', status: 'success', icon: CheckCircle },
     { label: 'Vault Registry', value: 'Synced', status: 'success', icon: CheckCircle, detail: 'Last block #8,472,391' },
     { label: 'Chainlink Proof of Reserve', value: 'Verified', status: 'success', icon: CheckCircle }
@@ -46,11 +62,23 @@ export function StatusPage() {
                   <item.icon
                     size={32}
                     weight="fill"
-                    className={item.status === 'success' ? 'text-accent' : 'text-destructive'}
+                    className={
+                      item.status === 'success' 
+                        ? 'text-accent' 
+                        : item.status === 'warning'
+                        ? 'text-primary'
+                        : 'text-destructive'
+                    }
                   />
                 </div>
-                <Badge className={item.status === 'success' ? 'bg-accent/20 text-accent border-accent/40' : 'bg-destructive/20 text-destructive border-destructive/40'}>
-                  {item.status === 'success' ? '✓ Active' : '⚠ Alert'}
+                <Badge className={
+                  item.status === 'success' 
+                    ? 'bg-accent/20 text-accent border-accent/40' 
+                    : item.status === 'warning'
+                    ? 'bg-primary/20 text-primary border-primary/40'
+                    : 'bg-destructive/20 text-destructive border-destructive/40'
+                }>
+                  {item.status === 'success' ? '✓ Active' : item.status === 'warning' ? '⌛ Checking' : '✗ Offline'}
                 </Badge>
               </Card>
             </motion.div>

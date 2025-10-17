@@ -1,24 +1,94 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { QrCode, Wallet, ShieldCheck, Vault } from '@phosphor-icons/react'
+import { QrCode, Wallet, ShieldCheck, Vault, ArrowRight } from '@phosphor-icons/react'
+import { api } from '@/lib/api'
+import { useKV } from '@github/spark/hooks'
+import { toast } from 'sonner'
 
 export function JoinPage() {
+  const [qrData, setQrData] = useState<{ uuid: string; qr: string; deeplink: string } | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isPolling, setIsPolling] = useState(false)
+  const [, setWalletAddress] = useKV<string | null>('wallet-address', null)
+  const [, setWalletData] = useKV<{ created?: string; network?: string } | null>('wallet-data', null)
   const [connected, setConnected] = useState(false)
   const [progress, setProgress] = useState(0)
 
-  const handleConnect = () => {
+  const startOnboarding = async () => {
+    setIsLoading(true)
+    const response = await api.onboard.start()
+    
+    if (response.data) {
+      setQrData(response.data)
+      setIsPolling(true)
+      toast.success('QR code generated - scan with Xumm')
+    } else {
+      toast.error(response.error || 'Backend offline - using simulation mode')
+      handleSimulatedConnect()
+    }
+    
+    setIsLoading(false)
+  }
+
+  const handleSimulatedConnect = () => {
     setConnected(true)
     let current = 0
     const interval = setInterval(() => {
       current += 33.33
       setProgress(current)
-      if (current >= 100) clearInterval(interval)
+      if (current >= 100) {
+        clearInterval(interval)
+        setWalletAddress('rN7n7otQDd6FczFgLdllMGMK6Z8eJaFYsL')
+        setWalletData({
+          created: new Date().toISOString().split('T')[0],
+          network: 'XRPL Mainnet (Simulated)'
+        })
+      }
     }, 400)
   }
+
+  useEffect(() => {
+    if (!isPolling || !qrData) return
+
+    const pollResult = async () => {
+      const response = await api.onboard.result(qrData.uuid)
+      
+      if (response.data?.signed && response.data.account) {
+        setIsPolling(false)
+        setConnected(true)
+        
+        let current = 0
+        const interval = setInterval(() => {
+          current += 33.33
+          setProgress(current)
+          if (current >= 100) {
+            clearInterval(interval)
+            setWalletAddress(response.data!.account!)
+            setWalletData({
+              created: new Date().toISOString().split('T')[0],
+              network: 'XRPL Mainnet'
+            })
+            toast.success('Wallet connected successfully!')
+          }
+        }, 400)
+      }
+    }
+
+    const interval = setInterval(pollResult, 2000)
+    const timeout = setTimeout(() => {
+      setIsPolling(false)
+      toast.error('QR code expired - please try again')
+    }, 300000)
+
+    return () => {
+      clearInterval(interval)
+      clearTimeout(timeout)
+    }
+  }, [isPolling, qrData, setWalletAddress, setWalletData])
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 pt-20 pb-12">
@@ -67,19 +137,46 @@ export function JoinPage() {
                   <p className="text-sm text-muted-foreground">Scan QR code or sign with XUMM</p>
                 </div>
 
-                <div className="aspect-square bg-background border border-border rounded-lg flex items-center justify-center">
-                  <div className="w-48 h-48 bg-primary/10 border-4 border-primary/30 rounded-lg flex items-center justify-center">
-                    <span className="text-xs text-muted-foreground font-mono">QR_CODE_WIDGET</span>
-                  </div>
+                <div className="aspect-square bg-background border border-border rounded-lg flex items-center justify-center relative">
+                  {qrData ? (
+                    <img src={qrData.qr} alt="Xumm QR Code" className="w-full h-full object-contain p-4" />
+                  ) : (
+                    <div className="w-48 h-48 bg-primary/10 border-4 border-primary/30 rounded-lg flex items-center justify-center">
+                      <QrCode size={64} className="text-primary/40" weight="duotone" />
+                    </div>
+                  )}
+                  {isPolling && (
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+                      <div className="text-center space-y-2">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto" />
+                        <p className="text-sm text-muted-foreground">Waiting for signature...</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <Button
-                  onClick={handleConnect}
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground uppercase tracking-wider font-semibold"
-                  size="lg"
-                >
-                  Simulate Connection
-                </Button>
+                <div className="space-y-3">
+                  <Button
+                    onClick={startOnboarding}
+                    disabled={isLoading || isPolling || !!qrData}
+                    className="w-full bg-accent hover:bg-accent/90 text-accent-foreground uppercase tracking-wider font-semibold"
+                    size="lg"
+                  >
+                    {isLoading ? 'Generating...' : qrData ? 'Scan with Xumm' : 'Connect with Xumm'}
+                    <ArrowRight size={18} className="ml-2" />
+                  </Button>
+                  
+                  {!qrData && (
+                    <Button
+                      onClick={handleSimulatedConnect}
+                      variant="outline"
+                      className="w-full border-primary/40 text-primary hover:bg-primary/10"
+                      size="sm"
+                    >
+                      Or Simulate (Demo Mode)
+                    </Button>
+                  )}
+                </div>
               </Card>
             </motion.div>
           </div>

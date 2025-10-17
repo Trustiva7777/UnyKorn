@@ -4,12 +4,20 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Vault, ShieldCheck, CopySimple, FileText } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { useKV } from '@github/spark/hooks'
 
 export function WalletPage() {
+  const [walletAddress] = useKV<string | null>('wallet-address', null)
+  const [walletData] = useKV<{ created?: string; network?: string } | null>('wallet-data', null)
+
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
     toast.success('Copied to clipboard')
   }
+
+  const displayAddress = walletAddress || 'rN7n7otQDd6FczFgLdllMGMK6Z8eJaFYsL'
+  const displayNetwork = walletData?.network || 'XRPL Mainnet'
+  const displayCreated = walletData?.created || '2024-12-15'
 
   return (
     <div className="min-h-screen px-6 pt-24 pb-12">
@@ -41,14 +49,14 @@ export function WalletPage() {
               <div className="space-y-3">
                 <div className="bg-background border border-border rounded-lg p-4">
                   <p className="font-mono text-sm text-foreground break-all">
-                    rN7n7otQDd6FczFgLdllMGMK6Z8eJaFYsL
+                    {displayAddress}
                   </p>
                 </div>
                 
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleCopy('rN7n7otQDd6FczFgLdllMGMK6Z8eJaFYsL')}
+                  onClick={() => handleCopy(displayAddress)}
                   className="w-full border-primary/40 text-primary hover:bg-primary/10"
                 >
                   <CopySimple size={16} className="mr-2" />
@@ -59,11 +67,11 @@ export function WalletPage() {
               <div className="pt-4 border-t border-border space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground font-mono">Network</span>
-                  <Badge className="bg-accent/20 text-accent border-accent/40">XRPL Mainnet</Badge>
+                  <Badge className="bg-accent/20 text-accent border-accent/40">{displayNetwork}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground font-mono">Created</span>
-                  <span className="text-sm text-foreground font-mono">2024-12-15</span>
+                  <span className="text-sm text-foreground font-mono">{displayCreated}</span>
                 </div>
               </div>
             </Card>
