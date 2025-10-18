@@ -30,6 +30,7 @@ Visit http://localhost:5173 to see the app.
 | **[DEPLOYMENT.md](./DEPLOYMENT.md)** | Production deployment (Pages + Cloud) |
 | **[PRD.md](./PRD.md)** | Product requirements & design philosophy |
 | **[INTEGRATION.md](./INTEGRATION.md)** | Legacy integration notes |
+| **[CHANGELOG.md](./CHANGELOG.md)** | Release notes and validation checklists |
 | **[AUTH-SESSION-CSRF.md](./docs/AUTH-SESSION-CSRF.md)** | v0.1.1 Auth → Session → Cookie → CSRF |
 
 ## 🌟 Overview
