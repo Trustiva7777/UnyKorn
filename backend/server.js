@@ -3,6 +3,8 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import { randomUUID } from 'crypto'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
+import rateLimit from 'express-rate-limit'
+import client from 'prom-client'
 
 dotenv.config()
 
@@ -34,7 +36,7 @@ const jwks = createRemoteJWKSet(new URL(`${XUMM_ISSUER}/certs`))
 async function verifyXummJwt(authHeader) {
   if (!authHeader) throw new Error('Missing Authorization')
   const token = authHeader.replace(/^Bearer\s+/i, '')
-  const verifyOpts = { issuer: XUMM_ISSUER }
+  const verifyOpts = { issuer: XUMM_ISSUER, clockTolerance: '60s' }
   const aud = process.env.XUMM_CLIENT_ID
   if (aud) Object.assign(verifyOpts, { audience: aud })
   const { payload } = await jwtVerify(token, jwks, verifyOpts)
@@ -234,13 +236,23 @@ app.get('/admin/vaults', (req, res) => {
 })
 
 // Protected user endpoint using Xumm JWT
-app.get('/me', async (req, res) => {
+const meLimiter = rateLimit({ windowMs: 60_000, max: 60 })
+app.get('/me', meLimiter, async (req, res) => {
   try {
+    const auth = req.headers.authorization || ''
+    if (auth.length > 4096) return res.sendStatus(400)
     const claims = await verifyXummJwt(req.headers.authorization)
     res.json({ ok: true, claims })
   } catch (e) {
     res.status(401).json({ ok: false, error: e?.message || 'Unauthorized' })
   }
+})
+
+// Prometheus metrics
+client.collectDefaultMetrics()
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', client.register.contentType)
+  res.end(await client.register.metrics())
 })
 
 // Lightweight health bundle for Spark status dashboard
