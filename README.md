@@ -167,6 +167,8 @@ spark-template/
 ### Frontend (.env or GitHub Actions Variables)
 ```bash
 VITE_API_BASE=https://api.unykorn.org  # Backend API URL
+VITE_XUMM_CLIENT_ID=your-xumm-oauth2-client-id
+VITE_BASE_URL=https://unykorn.org      # Origin used in PKCE redirect
 VITE_BRAND=Unykorn                     # Brand name
 VITE_NETWORK_LABEL=XRPL Mainnet        # Network label
 VITE_ENABLE_SIMULATION=false           # Simulation mode
@@ -180,7 +182,8 @@ VITE_ENABLE_SIMULATION=false           # Simulation mode
 
 XUMM_API_KEY=your-key                  # Xumm API key (recommended name)
 XUMM_API_SECRET=your-secret            # Xumm API secret (recommended name)
-CORS_ORIGINS=https://unykorn.org       # Allowed origins
+CORS_ORIGINS=https://unykorn.org,https://www.unykorn.org  # Allowed origins (add any others)
+XUMM_CLIENT_ID=your-xumm-oauth2-client-id  # Optional: enforce JWT audience
 PORT=4000                              # Server port
 ```
 

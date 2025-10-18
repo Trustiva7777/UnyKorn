@@ -9,6 +9,18 @@ import { useKV } from '@github/spark/hooks'
 export function WalletPage() {
   const [walletAddress] = useKV<string | null>('wallet-address', null)
   const [walletData] = useKV<{ created?: string; network?: string } | null>('wallet-data', null)
+  const isClient = typeof window !== 'undefined'
+  const jwt = isClient ? localStorage.getItem('xumm_jwt') : null
+  const expMs = (() => {
+    if (!jwt) return null
+    try {
+      const [, p] = jwt.split('.')
+      const { exp } = JSON.parse(atob(p))
+      return typeof exp === 'number' ? exp * 1000 : null
+    } catch { return null }
+  })()
+  const msLeft = expMs ? expMs - Date.now() : null
+  const minutesLeft = msLeft ? Math.max(0, Math.floor(msLeft / 60000)) : null
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -73,6 +85,14 @@ export function WalletPage() {
                   <span className="text-sm text-muted-foreground font-mono">Created</span>
                   <span className="text-sm text-foreground font-mono">{displayCreated}</span>
                 </div>
+                {minutesLeft !== null && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground font-mono">Session</span>
+                    <span className={`text-sm font-mono ${minutesLeft < 2 ? 'text-destructive' : 'text-foreground'}`}>
+                      expires in ~{minutesLeft}m
+                    </span>
+                  </div>
+                )}
               </div>
             </Card>
           </motion.div>

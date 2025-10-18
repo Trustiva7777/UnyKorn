@@ -1,10 +1,14 @@
 import { useEffect } from 'react'
+import { useXummAuth } from '@/hooks/use-xumm-auth'
 
 export function AuthCallbackPage() {
+  const { ready, jwt } = useXummAuth()
   useEffect(() => {
     const t = setTimeout(() => {
-      if (typeof window !== 'undefined') window.location.hash = '#/Wallet'
-    }, 1000)
+      if (typeof window !== 'undefined' && (ready || jwt)) {
+        window.location.hash = '#/Wallet'
+      }
+    }, 1200)
     return () => clearTimeout(t)
   }, [])
   return (

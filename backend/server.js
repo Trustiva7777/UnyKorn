@@ -16,7 +16,13 @@ const corsOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',') 
   : ['http://localhost:5173', 'http://localhost:3000']
 
-app.use(cors({ origin: corsOrigins }))
+const corsOptions = {
+  origin: corsOrigins,
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 app.use(express.json())
 
 const payloadStore = new Map()
@@ -28,7 +34,10 @@ const jwks = createRemoteJWKSet(new URL(`${XUMM_ISSUER}/certs`))
 async function verifyXummJwt(authHeader) {
   if (!authHeader) throw new Error('Missing Authorization')
   const token = authHeader.replace(/^Bearer\s+/i, '')
-  const { payload } = await jwtVerify(token, jwks, { issuer: XUMM_ISSUER })
+  const verifyOpts = { issuer: XUMM_ISSUER }
+  const aud = process.env.XUMM_CLIENT_ID
+  if (aud) Object.assign(verifyOpts, { audience: aud })
+  const { payload } = await jwtVerify(token, jwks, verifyOpts)
   return payload
 }
 
