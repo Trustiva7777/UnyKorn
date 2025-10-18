@@ -10,9 +10,11 @@ import { WalletPage } from './components/pages/WalletPage'
 import { StatusPage } from './components/pages/StatusPage'
 import { PartnersPage } from './components/pages/PartnersPage'
 import { AdminPage } from './components/pages/AdminPage'
+import { useXummAuth } from '@/hooks/use-xumm-auth'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('Home')
+  const { sessionExp, ready } = useXummAuth()
 
   // Sync with location hash for simple routing (/#/Connect etc.)
   useEffect(() => {
@@ -36,19 +38,17 @@ function App() {
       case 'auth/callback':
         return <AuthCallbackPage />
       case 'Wallet':
-        if (typeof window !== 'undefined') {
-          const jwt = localStorage.getItem('xumm_jwt')
-          if (!jwt) {
-            return (
-              <div className="min-h-screen px-6 pt-24 pb-12">
-                <div className="max-w-2xl mx-auto space-y-4">
-                  <h2 className="text-2xl font-bold text-primary">Sign in required</h2>
-                  <p className="text-muted-foreground">You need to connect your wallet before accessing the vault.</p>
-                  <button className="underline" onClick={() => setCurrentPage('Connect')}>Go to Connect</button>
-                </div>
+        if (!ready) return <div className="min-h-screen px-6 pt-24 pb-12"><div className="max-w-2xl mx-auto">Checking session…</div></div>
+        if (!sessionExp) {
+          return (
+            <div className="min-h-screen px-6 pt-24 pb-12">
+              <div className="max-w-2xl mx-auto space-y-4">
+                <h2 className="text-2xl font-bold text-primary">Sign in required</h2>
+                <p className="text-muted-foreground">You need to connect your wallet before accessing the vault.</p>
+                <button className="underline" onClick={() => setCurrentPage('Connect')}>Go to Connect</button>
               </div>
-            )
-          }
+            </div>
+          )
         }
         return <WalletPage />
       case 'Status':

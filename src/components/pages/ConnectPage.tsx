@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useXummAuth } from '@/hooks/use-xumm-auth'
 
 export function ConnectPage() {
-  const { login, logout, jwt, profile, ready } = useXummAuth()
+  const { login, logout, jwt, profile, sessionExp, ready } = useXummAuth()
 
   return (
     <div className="min-h-screen px-6 pt-24 pb-12">
@@ -17,13 +17,13 @@ export function ConnectPage() {
         <Card className="p-8 bg-card border-primary/20 space-y-4">
           {!ready ? (
             <p className="text-sm text-muted-foreground">Initializing…</p>
-          ) : !jwt ? (
+          ) : !sessionExp ? (
             <Button onClick={login} className="w-full">Sign in with Xaman</Button>
           ) : (
             <div className="space-y-4">
               <p className="text-sm">Signed in</p>
               <pre className="text-xs p-3 bg-background rounded border border-border overflow-auto">
-                {JSON.stringify(profile ?? { jwt }, null, 2)}
+                {JSON.stringify(profile ?? { session: { exp: sessionExp } }, null, 2)}
               </pre>
               <Button variant="outline" onClick={logout} className="w-full">Sign out</Button>
             </div>

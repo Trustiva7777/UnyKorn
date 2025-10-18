@@ -4,21 +4,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Vault, ShieldCheck, CopySimple, FileText } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { useXummAuth } from '@/hooks/use-xumm-auth'
 import { useKV } from '@github/spark/hooks'
 
 export function WalletPage() {
+  const { sessionExp } = useXummAuth()
   const [walletAddress] = useKV<string | null>('wallet-address', null)
   const [walletData] = useKV<{ created?: string; network?: string } | null>('wallet-data', null)
-  const isClient = typeof window !== 'undefined'
-  const jwt = isClient ? localStorage.getItem('xumm_jwt') : null
-  const expMs = (() => {
-    if (!jwt) return null
-    try {
-      const [, p] = jwt.split('.')
-      const { exp } = JSON.parse(atob(p))
-      return typeof exp === 'number' ? exp * 1000 : null
-    } catch { return null }
-  })()
+  const expMs = sessionExp ? sessionExp * 1000 : null
   const msLeft = expMs ? expMs - Date.now() : null
   const minutesLeft = msLeft ? Math.max(0, Math.floor(msLeft / 60000)) : null
 

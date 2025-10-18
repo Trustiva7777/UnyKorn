@@ -64,6 +64,32 @@ function generateMockAddress(): string {
 }
 
 export const api = {
+  auth: {
+    csrf: () =>
+      fetchApi<{ csrf: string }>(
+        '/auth/csrf',
+        { credentials: 'include' }
+      ),
+    session: (bearerToken: string, csrfToken: string) =>
+      fetchApi<{ ok: boolean; exp?: number }>(
+        '/auth/session',
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { Authorization: `Bearer ${bearerToken}`, 'X-CSRF-Token': csrfToken },
+        }
+      ),
+    logout: (csrfToken: string) =>
+      fetchApi<{ ok: boolean }>(
+        '/auth/logout',
+        { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': csrfToken } }
+      ),
+  },
+  me: () =>
+    fetchApi<{ ok: boolean; claims?: { exp?: number; sub?: string; [k: string]: any } }>(
+      '/me',
+      { credentials: 'include' }
+    ),
   status: {
     get: () =>
       fetchApi<{
@@ -103,10 +129,13 @@ export const api = {
   },
 
   onboard: {
-    start: () =>
-      fetchApi<{ uuid: string; qr: string; deeplink: string }>(
+    start: async () => {
+      // obtain CSRF and include credentials
+      const csrfRes = await api.auth.csrf()
+      const csrf = csrfRes.data?.csrf || ''
+      return fetchApi<{ uuid: string; qr: string; deeplink: string }>(
         '/onboard/start',
-        { method: 'POST' },
+        { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': csrf } },
         () => {
           const uuid = crypto.randomUUID()
           return {
@@ -115,7 +144,8 @@ export const api = {
             deeplink: `xumm://xumm.app/sign/${uuid}`,
           }
         }
-      ),
+      )
+    },
     result: (uuid: string) =>
       fetchApi<{ signed: boolean; account?: string }>(
         `/onboard/result/${uuid}`,

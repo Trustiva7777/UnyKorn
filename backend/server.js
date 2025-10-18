@@ -22,7 +22,7 @@ const corsOrigins = process.env.CORS_ORIGINS
 const corsOptions = {
   origin: corsOrigins,
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
 }
 app.use(cors(corsOptions))
 app.options('*', cors(corsOptions))
@@ -63,6 +63,22 @@ async function verifySessionCookie(req) {
   const { payload } = await jwtVerify(cookie, key, {})
   return payload
 }
+
+// CSRF protection (double-submit cookie): require header X-CSRF-Token to match 'csrf' cookie on mutating requests
+const CSRF_COOKIE = 'csrf'
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+const CSRF_EXEMPT_PATHS = new Set(['/auth/csrf'])
+function csrfProtection(req, res, next) {
+  if (!MUTATING_METHODS.has(req.method)) return next()
+  if (CSRF_EXEMPT_PATHS.has(req.path)) return next()
+  const header = req.get('X-CSRF-Token')
+  const cookie = req.cookies?.[CSRF_COOKIE]
+  if (!header || !cookie || header !== cookie) {
+    return res.status(403).json({ ok: false, error: 'CSRF token missing or invalid' })
+  }
+  return next()
+}
+app.use(csrfProtection)
 
 app.get('/health', (req, res) => {
   res.json({ 
@@ -256,16 +272,14 @@ app.get('/admin/vaults', (req, res) => {
   ])
 })
 
-// Protected user endpoint using Xumm JWT
+// Protected user endpoint using cookie session only (no Bearer allowed)
 const meLimiter = rateLimit({ windowMs: 60_000, max: 60 })
 app.get('/me', meLimiter, async (req, res) => {
   try {
-    const auth = req.headers.authorization || ''
-    if (auth.length > 4096) return res.sendStatus(400)
-    const claims = await verifyXummJwt(req.headers.authorization)
+    const claims = await verifySessionCookie(req)
     res.json({ ok: true, claims })
   } catch (e) {
-    res.status(401).json({ ok: false, error: e?.message || 'Unauthorized' })
+    res.status(401).json({ ok: false, error: 'Unauthorized' })
   }
 })
 
@@ -280,7 +294,7 @@ app.post('/auth/session', async (req, res) => {
       sameSite: 'lax',
       maxAge: 24 * 3600 * 1000,
     })
-    res.json({ ok: true })
+    res.json({ ok: true, exp: claims.exp })
   } catch (e) {
     res.status(401).json({ ok: false })
   }
