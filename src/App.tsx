@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { ConstellationBackground } from './components/ConstellationBackground'
 import { Navigation } from './components/Navigation'
 import { HomePage } from './components/pages/HomePage'
 import { JoinPage } from './components/pages/JoinPage'
+import { ConnectPage } from './components/pages/ConnectPage'
+import { AuthCallbackPage } from './components/pages/AuthCallbackPage'
 import { WalletPage } from './components/pages/WalletPage'
 import { StatusPage } from './components/pages/StatusPage'
 import { PartnersPage } from './components/pages/PartnersPage'
@@ -12,13 +14,42 @@ import { AdminPage } from './components/pages/AdminPage'
 function App() {
   const [currentPage, setCurrentPage] = useState('Home')
 
+  // Sync with location hash for simple routing (/#/Connect etc.)
+  useEffect(() => {
+    const applyFromHash = () => {
+      const hash = typeof window !== 'undefined' ? window.location.hash.replace('#/', '') : ''
+      if (hash) setCurrentPage(decodeURIComponent(hash))
+    }
+    applyFromHash()
+    window.addEventListener('hashchange', applyFromHash)
+    return () => window.removeEventListener('hashchange', applyFromHash)
+  }, [])
+
   const renderPage = () => {
     switch (currentPage) {
       case 'Home':
         return <HomePage onNavigate={setCurrentPage} />
       case 'Join':
         return <JoinPage />
+      case 'Connect':
+        return <ConnectPage />
+      case 'auth/callback':
+        return <AuthCallbackPage />
       case 'Wallet':
+        if (typeof window !== 'undefined') {
+          const jwt = localStorage.getItem('xumm_jwt')
+          if (!jwt) {
+            return (
+              <div className="min-h-screen px-6 pt-24 pb-12">
+                <div className="max-w-2xl mx-auto space-y-4">
+                  <h2 className="text-2xl font-bold text-primary">Sign in required</h2>
+                  <p className="text-muted-foreground">You need to connect your wallet before accessing the vault.</p>
+                  <button className="underline" onClick={() => setCurrentPage('Connect')}>Go to Connect</button>
+                </div>
+              </div>
+            )
+          }
+        }
         return <WalletPage />
       case 'Status':
         return <StatusPage />

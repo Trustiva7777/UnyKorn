@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { randomUUID } from 'crypto'
+import { createRemoteJWKSet, jwtVerify } from 'jose'
 
 dotenv.config()
 
@@ -19,6 +20,17 @@ app.use(cors({ origin: corsOrigins }))
 app.use(express.json())
 
 const payloadStore = new Map()
+
+// Xumm OAuth2/JWT verification
+const XUMM_ISSUER = 'https://oauth2.xumm.app'
+const jwks = createRemoteJWKSet(new URL(`${XUMM_ISSUER}/certs`))
+
+async function verifyXummJwt(authHeader) {
+  if (!authHeader) throw new Error('Missing Authorization')
+  const token = authHeader.replace(/^Bearer\s+/i, '')
+  const { payload } = await jwtVerify(token, jwks, { issuer: XUMM_ISSUER })
+  return payload
+}
 
 app.get('/health', (req, res) => {
   res.json({ 
@@ -210,6 +222,16 @@ app.get('/admin/vaults', (req, res) => {
       verified: true
     }
   ])
+})
+
+// Protected user endpoint using Xumm JWT
+app.get('/me', async (req, res) => {
+  try {
+    const claims = await verifyXummJwt(req.headers.authorization)
+    res.json({ ok: true, claims })
+  } catch (e) {
+    res.status(401).json({ ok: false, error: e?.message || 'Unauthorized' })
+  }
 })
 
 // Lightweight health bundle for Spark status dashboard

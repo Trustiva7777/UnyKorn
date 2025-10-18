@@ -5,7 +5,7 @@ interface NavigationProps {
   onNavigate: (page: string) => void
 }
 
-const pages = ['Home', 'Join', 'Wallet', 'Status', 'Partners', 'Admin']
+const pages = ['Home', 'Join', 'Connect', 'Wallet', 'Status', 'Partners', 'Admin']
 
 export function Navigation({ currentPage, onNavigate }: NavigationProps) {
   return (
@@ -21,7 +21,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
             {pages.map(page => (
               <button
                 key={page}
-                onClick={() => onNavigate(page)}
+                onClick={() => { onNavigate(page); if (typeof window !== 'undefined') window.location.hash = `#/${encodeURIComponent(page)}` }}
                 className="relative px-4 py-2 text-sm font-medium uppercase tracking-wider transition-colors"
               >
                 <span className={currentPage === page ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}>
