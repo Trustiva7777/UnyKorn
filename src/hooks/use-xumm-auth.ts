@@ -26,7 +26,17 @@ export function useXummAuth() {
           setJwt(token ?? null)
           const me = await instance.userInfo().catch(() => null)
           setProfile(me)
-          if (token) localStorage.setItem('xumm_jwt', token)
+          if (token) {
+            localStorage.setItem('xumm_jwt', token)
+            // Create server-side session cookie
+            try {
+              await fetch(`${import.meta.env.VITE_API_BASE}/auth/session`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                credentials: 'include',
+              })
+            } catch {}
+          }
         } else {
           const existing = typeof window !== 'undefined' ? localStorage.getItem('xumm_jwt') : null
           if (existing) setJwt(existing)
@@ -41,6 +51,9 @@ export function useXummAuth() {
   }
   const logout = async () => {
     await xumm?.logout()
+    try {
+      await fetch(`${import.meta.env.VITE_API_BASE}/auth/logout`, { method: 'POST', credentials: 'include' })
+    } catch {}
     if (typeof window !== 'undefined') localStorage.removeItem('xumm_jwt')
     setJwt(null)
     setProfile(null)

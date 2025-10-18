@@ -184,6 +184,7 @@ XUMM_API_KEY=your-key                  # Xumm API key (recommended name)
 XUMM_API_SECRET=your-secret            # Xumm API secret (recommended name)
 CORS_ORIGINS=https://unykorn.org,https://www.unykorn.org  # Allowed origins (add any others)
 XUMM_CLIENT_ID=your-xumm-oauth2-client-id  # Optional: enforce JWT audience
+SESSION_SECRET=generate-a-strong-random     # For cookie session signing
 PORT=4000                              # Server port
 ```
 

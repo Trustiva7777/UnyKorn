@@ -2,9 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { randomUUID } from 'crypto'
-import { createRemoteJWKSet, jwtVerify } from 'jose'
+import { createRemoteJWKSet, jwtVerify, SignJWT } from 'jose'
 import rateLimit from 'express-rate-limit'
 import client from 'prom-client'
+import cookieParser from 'cookie-parser'
 
 dotenv.config()
 
@@ -26,6 +27,7 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.options('*', cors(corsOptions))
 app.use(express.json())
+app.use(cookieParser())
 
 const payloadStore = new Map()
 
@@ -40,6 +42,25 @@ async function verifyXummJwt(authHeader) {
   const aud = process.env.XUMM_CLIENT_ID
   if (aud) Object.assign(verifyOpts, { audience: aud })
   const { payload } = await jwtVerify(token, jwks, verifyOpts)
+  return payload
+}
+
+// Cookie session helpers
+const SESSION_COOKIE = 'sid'
+const SESSION_SECRET = (process.env.SESSION_SECRET || 'change-me').padEnd(32, '0')
+async function createSession(payload) {
+  const alg = 'HS256'
+  const key = new TextEncoder().encode(SESSION_SECRET)
+  const token = await new SignJWT({ sub: payload.sub, exp: payload.exp, iat: Math.floor(Date.now()/1000) })
+    .setProtectedHeader({ alg })
+    .sign(key)
+  return token
+}
+async function verifySessionCookie(req) {
+  const cookie = req.cookies?.[SESSION_COOKIE]
+  if (!cookie) throw new Error('No session')
+  const key = new TextEncoder().encode(SESSION_SECRET)
+  const { payload } = await jwtVerify(cookie, key, {})
   return payload
 }
 
@@ -246,6 +267,36 @@ app.get('/me', meLimiter, async (req, res) => {
   } catch (e) {
     res.status(401).json({ ok: false, error: e?.message || 'Unauthorized' })
   }
+})
+
+// Create cookie session from Xumm JWT (client sends Bearer once, server sets cookie)
+app.post('/auth/session', async (req, res) => {
+  try {
+    const claims = await verifyXummJwt(req.headers.authorization)
+    const token = await createSession(claims)
+    res.cookie(SESSION_COOKIE, token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 24 * 3600 * 1000,
+    })
+    res.json({ ok: true })
+  } catch (e) {
+    res.status(401).json({ ok: false })
+  }
+})
+
+// Clear cookie session
+app.post('/auth/logout', (_req, res) => {
+  res.clearCookie(SESSION_COOKIE, { httpOnly: true, secure: true, sameSite: 'lax' })
+  res.json({ ok: true })
+})
+
+// CSRF token endpoint (simple double-submit example)
+app.get('/auth/csrf', (_req, res) => {
+  const token = Math.random().toString(36).slice(2)
+  res.cookie('csrf', token, { httpOnly: false, secure: true, sameSite: 'lax' })
+  res.json({ csrf: token })
 })
 
 // Prometheus metrics
