@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { XummPkce } from 'xumm-oauth2-pkce'
+import { XummPkce, type ResolvedFlow } from 'xumm-oauth2-pkce'
 import { api } from '@/lib/api'
 
 const clientId = import.meta.env.VITE_XUMM_CLIENT_ID as string | undefined
@@ -40,39 +40,57 @@ export function useXummAuth() {
       setReady(true)
       return
     }
-    const instance = new XummPkce({ clientId, redirectUrl })
+
+    const instance = new XummPkce(clientId, { redirectUrl })
     setXumm(instance)
-    instance
-      .handleCallback()
-      .then(async (authed) => {
-        if (authed) {
-          const token = await instance.getToken()
-          setJwt(token ?? null)
-          const me = await instance.userInfo().catch(() => null)
-          setProfile(me)
-          if (token) {
-            try {
-              // Get CSRF token
-              const csrfRes = await api.auth.csrf()
-              const csrf = csrfRes.data?.csrf || ''
-              // Create server-side session cookie (Bearer allowed here only)
-              const sess = await api.auth.session(token, csrf)
-              const exp = sess.data?.exp
-              setSessionExp(exp ?? null)
-              scheduleRefresh(exp ?? null)
-            } catch {}
-          }
-        } else {
-          // Probe existing cookie session
-          const me = await api.me()
-          if (me.data?.ok && me.data?.claims?.exp) {
-            setSessionExp(me.data.claims.exp)
-            scheduleRefresh(me.data.claims.exp)
-          }
+
+    const handleSession = async (session?: ResolvedFlow) => {
+      try {
+        if (!session) return
+        const token = session.jwt
+        setJwt(token ?? null)
+        setProfile(session.me)
+        if (token) {
+          const csrfRes = await api.auth.csrf()
+          const csrf = csrfRes.data?.csrf || ''
+          const sess = await api.auth.session(token, csrf)
+          const exp = sess.data?.exp
+          setSessionExp(exp ?? null)
+          scheduleRefresh(exp ?? null)
         }
-      })
-      .finally(() => setReady(true))
-      .catch(() => setReady(true))
+      } catch {
+        // Ignore
+      }
+    }
+
+    instance.on('retrieved', async () => {
+      const state = await instance.state()
+      await handleSession(state)
+      setReady(true)
+    })
+    instance.on('success', async () => {
+      const state = await instance.state()
+      await handleSession(state)
+      setReady(true)
+    })
+    instance.on('error', () => setReady(true))
+
+    // Also actively probe for existing state & cookie session
+    const getState: () => Promise<ResolvedFlow | undefined> = () => (
+      typeof instance.state === 'function' ? (instance.state() as Promise<ResolvedFlow | undefined>) : Promise.resolve(undefined)
+    )
+    getState().then(async (state) => {
+      if (state?.jwt) {
+        await handleSession(state)
+      } else {
+        const me = await api.me()
+        if (me.data?.ok && me.data?.claims?.exp) {
+          setSessionExp(me.data.claims.exp)
+          scheduleRefresh(me.data.claims.exp)
+        }
+      }
+      setReady(true)
+    }).catch(() => setReady(true))
   }, [])
 
   const login = async () => {
