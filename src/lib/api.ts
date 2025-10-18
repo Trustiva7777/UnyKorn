@@ -64,6 +64,24 @@ function generateMockAddress(): string {
 }
 
 export const api = {
+  status: {
+    get: () =>
+      fetchApi<{
+        api: { status: string; uptime: number; timestamp: string; environment: string }
+        xumm: { configured: boolean; status: string; app?: string; error?: string }
+        xrpl: { status: string; server?: string; complete_ledgers?: string; validated_ledger?: number; error?: string }
+        elapsed_ms: number
+      }>(
+        '/status.json',
+        undefined,
+        () => ({
+          api: { status: 'ok', uptime: 0, timestamp: new Date().toISOString(), environment: 'simulation' },
+          xumm: { configured: false, status: 'simulated' },
+          xrpl: { status: 'ok', server: 'sim', validated_ledger: Math.floor(Math.random() * 1_000_000) },
+          elapsed_ms: 5,
+        })
+      ),
+  },
   health: () =>
     fetchApi<{ status: string }>(
       '/health',

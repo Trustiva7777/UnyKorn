@@ -7,7 +7,7 @@ import { useApiStatus } from '@/hooks/use-api-status'
 import { API_BASE } from '@/lib/api'
 
 export function StatusPage() {
-  const { isOnline, isLoading, xummStatus } = useApiStatus()
+  const { isOnline, isLoading, xummStatus, xrplStatus, xrplDetail } = useApiStatus()
 
   const statusItems = [
     { 
@@ -19,11 +19,17 @@ export function StatusPage() {
     },
     { 
       label: 'Xumm Integration', 
-      value: isLoading ? 'Checking...' : (xummStatus === 'ok' ? 'Connected' : 'Offline'), 
+      value: isLoading ? 'Checking...' : (xummStatus === 'ok' ? 'Connected' : xummStatus || 'Offline'), 
       status: isLoading ? 'warning' : (xummStatus === 'ok' ? 'success' : 'error'), 
       icon: isLoading ? Warning : (xummStatus === 'ok' ? CheckCircle : XCircle)
     },
-    { label: 'XRPL Connectivity', value: 'Online', status: 'success', icon: CheckCircle },
+    { 
+      label: 'XRPL Connectivity', 
+      value: isLoading ? 'Checking...' : (xrplStatus === 'ok' ? 'Online' : 'Offline'),
+      status: isLoading ? 'warning' : (xrplStatus === 'ok' ? 'success' : 'error'), 
+      icon: isLoading ? Warning : (xrplStatus === 'ok' ? CheckCircle : XCircle),
+      detail: xrplDetail || undefined
+    },
     { label: 'Vault Registry', value: 'Synced', status: 'success', icon: CheckCircle, detail: 'Last block #8,472,391' },
     { label: 'Chainlink Proof of Reserve', value: 'Verified', status: 'success', icon: CheckCircle }
   ]
